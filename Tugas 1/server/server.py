@@ -3,16 +3,26 @@ import select
 import sys
 import os
 import time
+import pyaes
+import pbkdf2
+import binascii
+import secrets
 
 # define server address, create socket, bind, and listen
 # server_address = ('192.168.100.186', 5000)
-server_address = ('192.168.43.225', 5000)
+server_address = ('127.0.0.1', 5000)
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server_socket.bind(server_address)
 server_socket.listen(5)
 
 input_socket = [server_socket]
+
+password = "n3wPa55"
+passwordSalt = os.urandom(16)
+key = pbkdf2.PBKDF2(password, passwordSalt).read(32)
+iv = secrets.randbits(256)
+aes = pyaes.AESModeOfOperationCTR(key, pyaes.Counter(iv))
 
 try:
     while True:
@@ -38,10 +48,10 @@ try:
                     print(sock.getpeername(), 'request', filename)
                     # membuka dan mengirim file
                     try:
-                        with open("dataset/"+filename, 'rb') as file:
+                        with open("dataset"+filename, 'rb') as file:
                             # mengirimkan message header ke client
                             filesize = str(os.path.getsize("dataset/"+filename))
-                            message_header = "file-name: "+filename+",\nfile-size: "+filesize+",\n\n\n"
+                            message_header = "file-name: "+filename+",\nfile-size: "+filesize+"\nkey: "+key+"\niv: "+iv+",\n\n\n"
                             sock.send(bytes(message_header,'utf-8'))
                             # membaca dan mengirimkan isi file ke client
                             readfile = True
