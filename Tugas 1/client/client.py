@@ -1,5 +1,7 @@
 import socket
 import sys
+import pickle
+from message import Message as msg
 
 success_msg = (bytes('File sent successfully', 'utf-8'))
 failed_msg = (bytes('File not found', 'utf-8'))
@@ -18,20 +20,10 @@ try:
         filename = message_split[1].rstrip("\n")
 
         # mengirimkan request filename ke server
-        client_socket.send(bytes(message, 'utf-8'))
-        recv_data = client_socket.recv(1024)
-
-        # melakukan parsing untuk mendapatkan message header
-        message_header = recv_data.split('\n'.encode(),4)
-        
-        if len(message_header) > 3:
-            for i in range (4):
-                print(message_header[i])
-                
-        # jika file tidak ada atau error, maka koneksi akan ditutup
-        elif message_header[0].decode('utf-8') == 'Error':
-            print("Terjadi kelasalahan pada input ataupun file")
-            continue
+        cmd = msg('unduh', filename=filename)
+        client_socket.send(pickle.dump(cmd))
+        recv_data = client_socket.recv(2048)
+        res = pickle.loads(recv_data)
         
         # membuat file dan mengisi data kedalam file
         with open(filename, 'wb') as file:
