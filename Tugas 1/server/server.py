@@ -37,9 +37,17 @@ try:
             else:
                 # menerima nama file dari client dan memparsing nya untuk mendapatkan nama file
                 recv_data = sock.recv(2048)
-
+                
                 data = pickle.loads(recv_data)
-            
+                key_c = data.key
+                iv_c = data.iv
+                decryptor = pyaes.AESModeOfOperationCTR(key_c, pyaes.Counter(iv_c))
+
+                print(data.filename)
+                data.filename = decryptor.decrypt(data.filename)
+                print(data.filename)
+
+
                 if (data.message != 'unduh'):
                     print("error != unduh")
                     sock.send(bytes('Error', 'utf-8'))
@@ -47,7 +55,7 @@ try:
 
                 if data and data.message == 'unduh':
                     # mengambil nama file
-                    filename = data.filename
+                    filename = (data.filename).decode('utf-8')
                     print(sock.getpeername(), 'request', filename)
                     # membuka dan mengirim file
                     try:
@@ -55,7 +63,7 @@ try:
                             # mengirimkan message header ke client
                             filesize = str(os.path.getsize("dataset/"+filename))
                             readfile = file.read()
-                            print(type(readfile))
+
                             readfile = encryptor.encrypt(readfile)
                             messageToSent = msg('file',filename=filename, 
                                                 filesize=filesize, key=key, iv=iv, doc=readfile)
