@@ -2,6 +2,7 @@ import socket
 import sys
 import pickle
 from message import Message as msg
+import pyaes
 
 success_msg = (bytes('File sent successfully', 'utf-8'))
 failed_msg = (bytes('File not found', 'utf-8'))
@@ -11,6 +12,10 @@ failed_msg = (bytes('File not found', 'utf-8'))
 server_address = ('127.0.0.1', 5000)
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect(server_address)
+
+key         = None
+iv          = None
+decryptor   = None
 
 try:
     while True:
@@ -38,22 +43,16 @@ try:
         + "\nfile name : " + data.filename 
         + "\nfilesize: " + data.filesize
         + "\niv:  " + str(data.iv))
-        # membuat file dan mengisi data kedalam file
-        # with open(filename, 'wb') as file:
-        #     # Panjang pesan untuk membatasi loop recv sesuai ukuran file
-        #     msg_len = message_header[1].decode('utf-8').split(" ")
-        #     file_len = (int(msg_len[1][:-1])//1024) + 1
-        #     print ('File dibuat')
 
-        #     # mengirimkan file yang masuk ke recv_data (untuk memenuhi slot 1024 bytes sebelum
-        #     # masuk ke variabel selanjutnya (data))
-        #     file.write(message_header[4])
-            
-        #     while file_len:
-        #         print('Menerima data...')
-        #         data = client_socket.recv(1024)
-        #         file.write(data)
-        #         file_len-=1
+        key = data.key
+        iv = data.iv
+        decryptor = pyaes.AESModeOfOperationCTR(key, pyaes.Counter(iv))
+        # membuat file dan mengisi data kedalam file
+        with open(filename, 'wb') as file:
+            print ('File dibuat')
+            # mengirimkan file yang masuk ke recv_data (untuk memenuhi slot 1024 bytes sebelum
+            # masuk ke variabel selanjutnya (data))
+            file.write(decryptor.decrypt(data.file))
 
         ## INTERRUPT DENGAN KEYBOARD UNTUK MENGHENTIKAN PROSES
 

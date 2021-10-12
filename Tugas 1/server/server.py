@@ -55,6 +55,8 @@ try:
                             # mengirimkan message header ke client
                             filesize = str(os.path.getsize("dataset/"+filename))
                             readfile = file.read()
+                            print(type(readfile))
+                            readfile = encryptor.encrypt(readfile)
                             messageToSent = msg('file',filename=filename, 
                                                 filesize=filesize, key=key, iv=iv, doc=readfile)
                             sock.sendall(pickle.dumps(messageToSent))
