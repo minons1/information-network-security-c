@@ -59,6 +59,8 @@ try:
                     print(sock.getpeername(), 'request', filename)
                     # membuka dan mengirim file
                     try:
+                        time_start = time.time()
+                        print("SERVER TIME START => ", time_start)
                         with open("dataset/"+filename, 'rb') as file:
                             # mengirimkan message header ke client
                             filesize = str(os.path.getsize("dataset/"+filename))
@@ -69,7 +71,9 @@ try:
                                                 filesize=filesize, key=key, iv=iv, doc=readfile)
                             sock.sendall(pickle.dumps(messageToSent))
                             print ('File telah dikirim ke', sock.getpeername())
-
+                        time_end = time.time()
+                        print("SERVER TIME END => ", time_end)
+                        print("SERVER EXECUTE TIME CONSUMED => ", time_end - time_start)
                     # menangkap error ketika membuka file atau yang lainnya
                     except OSError:
                         print ("Could not open/read file: ", filename)

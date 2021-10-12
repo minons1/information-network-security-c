@@ -6,6 +6,7 @@ from message import Message as msg
 import pyaes
 import pbkdf2
 import secrets
+import time
 
 success_msg = (bytes('File sent successfully', 'utf-8'))
 failed_msg = (bytes('File not found', 'utf-8'))
@@ -37,7 +38,6 @@ try:
         filename = encryptor.encrypt(filename)
         cmd = msg(text='unduh', filename=filename, key=key_c, iv=iv_c)
         
-
         client_socket.sendall(pickle.dumps(cmd))
         
         res = b''
@@ -55,14 +55,17 @@ try:
         decryptor = pyaes.AESModeOfOperationCTR(key, pyaes.Counter(iv))
         print(data.filename)
         print(data.filesize)
-
+        time_start = time.time()
+        print("CLIENT TIME START => ", time_start)
         # membuat file dan mengisi data kedalam file
         with open(data.filename, 'wb') as file:
             print ('File dibuat')
             # mengirimkan file yang masuk ke recv_data (untuk memenuhi slot 1024 bytes sebelum
             # masuk ke variabel selanjutnya (data))
             file.write(decryptor.decrypt(data.file))
-
+        time_end = time.time()
+        print("CLIENT TIME END => ", time_end)
+        print("CLUENT EXECUTE TIME CONSUMED => ", time_end - time_start)
         ## INTERRUPT DENGAN KEYBOARD UNTUK MENGHENTIKAN PROSES
 
         # file telah diterima
