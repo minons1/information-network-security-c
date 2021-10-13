@@ -6,7 +6,6 @@ from message import Message as msg
 import pyaes
 import pbkdf2
 import secrets
-import time
 
 # create socket and connect to server
 server_address = ('127.0.0.1', 5000)
@@ -31,10 +30,6 @@ try:
         # mengirimkan request filename ke server
         filename = encryptor.encrypt(filename)
         cmd = msg(text='unduh', filename=filename, key=key_c, iv=iv_c)
-<<<<<<< HEAD
-=======
-        
->>>>>>> 15df38435cb05b814ce70a6a94de3abd3fb72665
         client_socket.sendall(pickle.dumps(cmd))
         
         # Receive and load message
@@ -45,7 +40,6 @@ try:
             if len(recv_data) < 2048 - 1:
                 break
         data = pickle.loads(res)
-<<<<<<< HEAD
         
         if(data.message != 'file'):
             print(data.message)
@@ -62,25 +56,6 @@ try:
                 print ('File dibuat')
                 # Decrypt the file and write to the file
                 file.write(decryptor.decrypt(data.file))
-=======
-        key = data.key
-        iv = data.iv
-        decryptor = pyaes.AESModeOfOperationCTR(key, pyaes.Counter(iv))
-        print(data.filename)
-        print(data.filesize)
-        time_start = time.time()
-        print("CLIENT TIME START => ", time_start)
-        # membuat file dan mengisi data kedalam file
-        with open(data.filename, 'wb') as file:
-            print ('File dibuat')
-            # mengirimkan file yang masuk ke recv_data (untuk memenuhi slot 1024 bytes sebelum
-            # masuk ke variabel selanjutnya (data))
-            file.write(decryptor.decrypt(data.file))
-        time_end = time.time()
-        print("CLIENT TIME END => ", time_end)
-        print("CLUENT EXECUTE TIME CONSUMED => ", time_end - time_start)
-        ## INTERRUPT DENGAN KEYBOARD UNTUK MENGHENTIKAN PROSES
->>>>>>> 15df38435cb05b814ce70a6a94de3abd3fb72665
 
             # file accepted
             print("File telah diterima\n")
