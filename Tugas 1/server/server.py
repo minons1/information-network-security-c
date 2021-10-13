@@ -2,7 +2,6 @@ import socket
 import select
 import sys
 import os
-import time
 from message import Message as msg
 import pickle
 import pbkdf2
@@ -10,7 +9,6 @@ import secrets
 import pyaes
 
 # define server address, create socket, bind, and listen
-# server_address = ('192.168.100.186', 5000)
 server_address = ('127.0.0.1', 5000)
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -19,11 +17,6 @@ server_socket.listen(5)
 
 input_socket = [server_socket]
 
-password = "n3wPa55"
-passwordSalt = os.urandom(16)
-key = pbkdf2.PBKDF2(password, passwordSalt).read(32)
-iv = secrets.randbits(256)
-encryptor = pyaes.AESModeOfOperationCTR(key, pyaes.Counter(iv))
 
 try:
     while True:
@@ -35,32 +28,37 @@ try:
                 input_socket.append(client_socket)
             
             else:
-                # menerima nama file dari client dan memparsing nya untuk mendapatkan nama file
+                # Encryptor Set-up
+                password = "n3wPa55"
+                passwordSalt = os.urandom(16)
+                key = pbkdf2.PBKDF2(password, passwordSalt).read(32)
+                iv = secrets.randbits(256)
+                encryptor = pyaes.AESModeOfOperationCTR(key, pyaes.Counter(iv))
+
+                # Receive & load request message from client
                 recv_data = sock.recv(2048)
-                
                 data = pickle.loads(recv_data)
+
+                # Decryptor setup
                 key_c = data.key
                 iv_c = data.iv
                 decryptor = pyaes.AESModeOfOperationCTR(key_c, pyaes.Counter(iv_c))
 
-                print(data.filename)
+                # decrypt filename requested from client
                 data.filename = decryptor.decrypt(data.filename)
-                print(data.filename)
-
 
                 if (data.message != 'unduh'):
-                    print("error != unduh")
-                    sock.send(bytes('Error', 'utf-8'))
+                    messageToSent = msg('Command not found',filename=None)
+                    sock.sendall(pickle.dumps(messageToSent))
                 
 
                 if data and data.message == 'unduh':
-                    # mengambil nama file
+                    # get filename
                     filename = (data.filename).decode('utf-8')
                     print(sock.getpeername(), 'request', filename)
-                    # membuka dan mengirim file
+                    # open and send file as requested
                     try:
                         with open("dataset/"+filename, 'rb') as file:
-                            # mengirimkan message header ke client
                             filesize = str(os.path.getsize("dataset/"+filename))
                             readfile = file.read()
 
@@ -70,10 +68,11 @@ try:
                             sock.sendall(pickle.dumps(messageToSent))
                             print ('File telah dikirim ke', sock.getpeername())
 
-                    # menangkap error ketika membuka file atau yang lainnya
+                    # handle file error
                     except OSError:
                         print ("Could not open/read file: ", filename)
-                        sock.send(bytes('Error', 'utf-8'))
+                        messageToSent = msg('File not found',filename=None)
+                        sock.sendall(pickle.dumps(messageToSent))
                         continue
 
                 else:
