@@ -58,8 +58,6 @@ try:
                     print(sock.getpeername(), 'request', filename)
                     # open and send file as requested
                     try:
-                        time_start = time.time()
-                        print("SERVER TIME START => ", time_start)
                         with open("dataset/"+filename, 'rb') as file:
                             filesize = str(os.path.getsize("dataset/"+filename))
                             readfile = file.read()
@@ -69,15 +67,8 @@ try:
                                                 filesize=filesize, key=key, iv=iv, doc=readfile)
                             sock.sendall(pickle.dumps(messageToSent))
                             print ('File telah dikirim ke', sock.getpeername())
-<<<<<<< HEAD
 
                     # handle file error
-=======
-                        time_end = time.time()
-                        print("SERVER TIME END => ", time_end)
-                        print("SERVER EXECUTE TIME CONSUMED => ", time_end - time_start)
-                    # menangkap error ketika membuka file atau yang lainnya
->>>>>>> 15df38435cb05b814ce70a6a94de3abd3fb72665
                     except OSError:
                         print ("Could not open/read file: ", filename)
                         messageToSent = msg('File not found',filename=None)
